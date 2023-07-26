@@ -150,7 +150,14 @@ module.exports = {
 				const options = raw.slice(1, 5).filter(a => a).map((option) => (
 					removeWhiteSpace(option)
 				));
-
+				
+				if (options.some(option => (
+					option.length > 100
+				))) {
+					return interaction.editReply({
+						content: `Failed to add question ${question}: answer option must be 100 characters or less!`,
+					});
+				}
 				// Asserts sufficient answers exists.
 				if (options.length < answers[answers.length - 1]) {
 					return interaction.editReply({

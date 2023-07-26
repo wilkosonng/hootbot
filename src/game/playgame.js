@@ -1,20 +1,7 @@
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require('discord.js');
 const { choiceEmojis } = require('../../config.json');
 const { PlayerLeaderboardEmbed, ResultEmbed, QuestionEmbed } = require('../helpers/embeds.js');
-
-// Creates an action bar for each # of options.
-const optionsBars = [new ActionRowBuilder()];
-
-choiceEmojis.forEach((e, i) => {
-	const button = new ButtonBuilder()
-		.setCustomId((i + 1).toString())
-		.setStyle(ButtonStyle.Secondary)
-		.setEmoji(e);
-
-	optionsBars.push(optionsBars[i].addComponents({
-		button
-	}));
-})
+const events = require('node:events');
 
 // Starts the game passed through.
 async function playGame(startChannel, channel, players, set, questions) {
@@ -48,45 +35,88 @@ async function playGame(startChannel, channel, players, set, questions) {
 	while (questions.length && !ended) {
 		const nextQuestion = questions.shift();
 		const questionEmbed = QuestionEmbed(set, questionNumber, nextQuestion);
-		console.log(optionsBars[nextQuestion.options.length]);
-		// TODO: Add action bar to message
+		const answered = new Map();
+		const answers = [0, 0, 0, 0];
+
+		const optionBars = [];
+		nextQuestion.options.forEach((e, i) => {
+			const actionBar = new ActionRowBuilder();
+
+			actionBar.setComponents(
+				new ButtonBuilder()
+					.setCustomId((i + 1).toString())
+					.setLabel(e)
+					.setEmoji(choiceEmojis[i])
+					.setStyle(ButtonStyle.Secondary));
+
+			optionBars.push(actionBar);
+		})
+
 		const msg = await channel.send({
 			embeds: [questionEmbed.setFooter({ text: `20 seconds | 0 responses` })],
+			components: optionBars
 		});
 		const startTime = Date.now();
-		const answered = new Map();
-
+		updateEmbed(msg, questionEmbed, 20, answered, players);
 		// Collects answers from action bar
 		const answerCollector = msg.createMessageComponentCollector({
 			filter: (buttonInteraction) => players.has(buttonInteraction.user.id) && !answered.has(buttonInteraction.user.id),
 			componentType: ComponentType.Button,
-			max: players.size
+			max: players.size,
+			time: 20_000
 		});
 
 		// Handles answers
-		answerCollector.on('collect', (buttonInteraction) => {
-			const answerTime = startTime - Date.now();
+		answerCollector.on('collect', async (buttonInteraction) => {
+			const answerTime = Date.now() - startTime;
+			const player = buttonInteraction.user.id;
+			const ansNum = parseInt(buttonInteraction.customId);
 
-			answered.set(buttonInteraction.user.id, answerTime);
+			answered.set(player, buttonInteraction);
+			answers[ansNum - 1]++;
 
-			if (answerTime < 20_000) {
-				if (nextQuestion.answers.includes(buttonInteraction.customId)) {
-					players.get(buttonInteraction.user.id) += getPoints(answerTime);
+			if (answerTime < 20_001) {
+				if (nextQuestion.answer.includes(ansNum)) {
+					players.set(player, players.get(player) + getPoints(answerTime));
 				}
 				buttonInteraction.reply({
-					content: `Locked in answer for ${buttonInteraction.emoji}!`,
+					content: `Locked in your answer for ${choiceEmojis[ansNum - 1]}!`,
 					ephemeral: true
 				});
 			}
 		});
 
-		// TODO - Add interval of 1s to update function
-
-
 		// TODO - Complete end event (send a leaderboard embed and update the question with the correct answers (ResultEmbed))
-		answerCollector.on('end', (collected) => {
+		try {
+			await events.once(answerCollector, 'end');
+			await msg.edit({
+				embeds: [ResultEmbed(set, questionNumber, nextQuestion, answers).setFooter( { text: `Responses: ${answered.size}`})]
+			});
+			await channel.send({
+				embeds: [PlayerLeaderboardEmbed(players)]
+			})
+			await new Promise(r => setTimeout(r, 2_000));
+			const sorted = [...(players.entries())].sort((a, b) => b[1] - a[1]);
 
-		});
+			sorted.forEach((e, i) => {
+				const player = e[0];
+				const score = e[1];
+
+				if (answered.has(player)) {
+					const buttonInteraction = answered.get(player);
+					buttonInteraction.followUp({
+						content: `Current Placement: ${i + 1}\nPoints: ${score | 0}`,
+						ephemeral: true
+					});
+				}
+			})
+		} catch (err) {
+			console.error(err);
+			startChannel.send({
+				content: 'Oops, something went wrong!!'
+			});
+			ended = true;
+		}
 
 		// Start a new question in 5 seconds
 		await new Promise(r => setTimeout(r, 5_000));
@@ -98,7 +128,7 @@ async function playGame(startChannel, channel, players, set, questions) {
 	}
 
 	channel.send({
-		content: '## Game Ended! Final Standings:',
+		content: '## Game Ended!',
 		embeds: [PlayerLeaderboardEmbed(players)]
 	});
 
@@ -108,22 +138,20 @@ async function playGame(startChannel, channel, players, set, questions) {
 	}
 
 	// Callback to update the question embed every second
-	function updateEmbed(row, msg) {
-		// TODO - Complete
-		if (!interval) {
-			return;
+	function updateEmbed(msg, embed, timeLeft, answers, playerList) {
+		if (timeLeft > 0 && answers.size < playerList.size) {
+			setTimeout(() => { updateEmbed(msg, embed, timeLeft - 1, answers, playerList) }, 1_000);
+			msg.edit({
+				embeds: [embed.setFooter({ text: `${timeLeft} seconds | ${answers.size} responses` })],
+				components: msg.components
+			});
 		}
-
-		msg.edit({
-			embeds: [QuestionEmbed],
-			components: [row]
-		});
 	}
 }
 
 // Judges the answers for correctness using string similarity.
 function getPoints(timeLeft) {
-	return 1000 - 45 * timeLeft / 1_000;
+	return 1000 - (45 * timeLeft / 1_000);
 }
 
 module.exports = {

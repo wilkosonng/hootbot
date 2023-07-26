@@ -1,4 +1,4 @@
-const { Client, Member, EmbedBuilder, bold, underscore, inlineCode, userMention } = require('discord.js');
+const { Client, Member, EmbedBuilder, bold, underscore, strikethrough, inlineCode, userMention } = require('discord.js');
 const { embedColor, choiceEmojis } = require('../../config.json');
 const info = require('./info.json');
 
@@ -27,25 +27,6 @@ function AddSummaryEmbed(title, description, author, questionSet) {
 			{ name: bold(underscore('Last Question')), value: questionSet[questionSet.length - 1].question },
 		)
 		.setTimestamp();
-}
-/**
- * Generates an embed that announces a particular player has buzzed in.
- *
- * @param {string} playerName The name of the player who buzzed in.
- * @param {number} team The team of the player belongs to.
- * @param {Client} client The Discord bot client object.
- * @param {number} numAnswers The number of answers required for the question set.
- *
- * @return {EmbedBuilder} The embed to be displayed.
-*/
-function BuzzEmbed(playerName, team, client, numAnswers) {
-	const emoji = client.emojis.cache.get(team);
-	const msg = new EmbedBuilder()
-		.setColor(embedColor)
-		.setTitle(`${emoji} ${playerName} has buzzed in! ${emoji}`)
-		.setDescription(`You have ${10 * numAnswers} seconds to answer!`);
-
-	return msg;
 }
 
 /**
@@ -79,49 +60,21 @@ function InfoEmbed(command) {
 }
 
 /**
- * Generates an embed listing question sets that match the query.
- *
- * @param {number} page The page of the query requested.
- * @param {number} maxPage The highest page of the query.
- * @param {string} keyword The string query the user submitted.
- * @param {Array} questionSets The list of question sets of the query.
- *
- * @return {EmbedBuilder} The embed to be displayed.
-*/
-function ListEmbed(page, maxPage, keyword, questionSets) {
-	const leftIndex = 10 * (page - 1);
-	const rightIndex = Math.min(10 * page, questionSets.length);
-	const slice = questionSets.slice(leftIndex, rightIndex);
-	let description = keyword ? underscore(`Matching query ${bold(keyword)}\n`) : '';
-
-	for (const [title, metadata] of slice) {
-		description += `${inlineCode(title)} - <@${metadata.owner}>\n`;
-	}
-
-	return new EmbedBuilder()
-		.setColor(embedColor)
-		.setTitle(`Page ${page} of ${maxPage}`)
-		.setDescription(description)
-		.setFooter({ text: `Question Sets ${leftIndex + 1} to ${rightIndex}` });
-
-}
-
-/**
  * Generates an embed with current point standings for each player.
  *
- * @param {Map<number, Object>} players The list of all player objects.
+ * @param {Map<number, number>} players The list of all player objects.
  *
  * @return {EmbedBuilder} The embed to be displayed.
 */
 function PlayerLeaderboardEmbed(players) {
 	const msg = new EmbedBuilder()
 		.setColor(embedColor)
-		.setTitle('🏆 Player Standings 🏆');
+		.setTitle('🏆 Standings 🏆');
 
 	let description = '';
-	const sorted = new Map([...(players.entries())].sort((a, b) => b[1].score - a[1].score));
+	const sorted = [...(players.entries())].sort((a, b) => b[1] - a[1]).slice(0, 10);
 	sorted.forEach((player) => {
-		description += `${inlineCode(`${player.score} points`)} - ${player.name}\n`;
+		description += `${inlineCode(`${Math.round(player[1])} points`)} - ${userMention(player[0])}\n`;
 	});
 	return msg.setDescription(description);
 }
@@ -137,47 +90,19 @@ function PlayerLeaderboardEmbed(players) {
  *
  * @return {EmbedBuilder} The embed to be displayed.
 */
-function QuestionEmbed(questionSet, num, questionObject, time) {
-	const { question, options, img } = questionObject;
+function QuestionEmbed(questionSet, num, questionObject) {
+	const { question, img } = questionObject;
 
 	const msg = new EmbedBuilder()
 		.setColor(embedColor)
-		.setTitle(`❔ ${questionSet} ※ Question ${num} ❔`)
+		.setTitle(`${questionSet} ※ Question ${num}`)
 		.setDescription(question);
-	
-	options.forEach((option, i) => {
-		msg.addFields({
-			name: choiceEmojis[i],
-			value: option
-		})
-	});
 
 	if (img) {
-		msg.setImage(question.img);
+		msg.setImage(img);
 	}
 
 	return msg;
-}
-/**
- * Generates an embed listing question set info to a query.
- *
- * @param {string} title The title of the question set requested.
- * @param {number} numQuestions The number of questions of the query.
- * @param {Object} data Query result containing the question set description, owner, and creation date.
- *
- * @return {EmbedBuilder} The embed to be displayed.
-*/
-function QuestionInfoEmbed(title, numQuestions, { description, owner, timestamp }) {
-	return new EmbedBuilder()
-		.setColor(embedColor)
-		.setTitle(title)
-		.setDescription(description)
-		.addFields(
-			{ name: bold(underscore('Topic Creator')), value: userMention(owner) },
-			{ name: bold(underscore('Number of Questions')), value: numQuestions.toString() },
-			{ name: bold(underscore('Date Created')), value: time(timestamp) },
-		)
-		.setTimestamp();
 }
 
 /**
@@ -186,26 +111,27 @@ function QuestionInfoEmbed(title, numQuestions, { description, owner, timestamp 
  * @param {string} questionSet The name of the current question set.
  * @param {number} num The current question number.
  * @param {Object} questionObject The question being asked.
+ * @param {Array<Number>} tally An array of the number of responses for each option
  *
  * @return {EmbedBuilder} The embed to be displayed.
 */
-function ResultEmbed(questionSet, num, questionObject) {
-	const { question, options, img } = questionObject;
+function ResultEmbed(questionSet, num, questionObject, tally) {
+	const { question, options, answer, img } = questionObject;
 
 	const msg = new EmbedBuilder()
 		.setColor(embedColor)
-		.setTitle(`❔ ${questionSet} ※ Question ${num} ❔`)
+		.setTitle(`${questionSet} ※ Question ${num}`)
 		.setDescription(question);
 
 	options.forEach((option, i) => {
 		msg.addFields({
-			name: choiceEmojis[i],
-			value: option
+			name: `${choiceEmojis[i]} (${tally[i]} ${tally[i] === 1 ? 'Response' : 'Responses'})`,
+			value: answer.includes(i + 1) ? bold(option) : strikethrough(option)
 		})
 	});
 
 	if (img) {
-		msg.setImage(question.img);
+		msg.setImage(img);
 	}
 
 	return msg;
@@ -229,7 +155,7 @@ function StartEmbed(questionSet, description, players) {
 		.setTimestamp();
 
 	let playerStrings;
-	
+
 	const playerIds = Array.from(players.keys());
 	playerStrings = playerIds.slice(Math.max(0, playerIds.length - 10), playerIds.length).map(player => (
 		userMention(player)
@@ -245,6 +171,5 @@ function StartEmbed(questionSet, description, players) {
 }
 
 module.exports = {
-	AddSummaryEmbed, PlayerLeaderboardEmbed, ResultEmbed,
-	QuestionEmbed, QuestionInfoEmbed, StartEmbed
+	AddSummaryEmbed, InfoEmbed, PlayerLeaderboardEmbed, ResultEmbed, QuestionEmbed, StartEmbed
 };

@@ -1,7 +1,7 @@
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder, ComponentType, PermissionsBitField } = require('discord.js');
 const { joinEmoji, leaveEmoji } = require('../../config.json');
 const { initializeApp } = require('firebase/app');
-const { getDatabase, ref, get, update } = require('firebase/database');
+const { getDatabase, ref, get } = require('firebase/database');
 const { playGame } = require('../game/playgame');
 const { stringSimilarity } = require('string-similarity-js');
 const { StartEmbed } = require('../helpers/embeds.js');
@@ -154,7 +154,7 @@ module.exports = {
 
 		const startCollector = startChannel.createMessageCollector({
 			filter: (msg) => msg.author?.id === interaction.user.id && (msg.content.toLowerCase() === 'endtrivia' || (msg.content.toLowerCase() === 'ready')),
-			time: 600_000
+			time: 900_000
 		});
 
 		startCollector.on('collect', async (msg) => {
