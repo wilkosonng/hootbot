@@ -86,7 +86,6 @@ async function playGame(startChannel, channel, players, set, questions) {
 			}
 		});
 
-		// TODO - Complete end event (send a leaderboard embed and update the question with the correct answers (ResultEmbed))
 		try {
 			await events.once(answerCollector, 'end');
 			await msg.edit({
