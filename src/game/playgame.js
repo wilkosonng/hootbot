@@ -90,11 +90,13 @@ async function playGame(startChannel, channel, players, set, questions) {
 		try {
 			await events.once(answerCollector, 'end');
 			await msg.edit({
-				embeds: [ResultEmbed(set, questionNumber, nextQuestion, answers).setFooter( { text: `Responses: ${answered.size}`})]
+				embeds: [ResultEmbed(set, questionNumber, nextQuestion, answers).setFooter({ text: `Responses: ${answered.size}` })]
 			});
-			await channel.send({
-				embeds: [PlayerLeaderboardEmbed(players)]
-			})
+			if (questions.length) {
+				await channel.send({
+					embeds: [PlayerLeaderboardEmbed(players)]
+				})
+			}
 			await new Promise(r => setTimeout(r, 2_000));
 			const sorted = [...(players.entries())].sort((a, b) => b[1] - a[1]);
 
@@ -139,6 +141,10 @@ async function playGame(startChannel, channel, players, set, questions) {
 
 	// Callback to update the question embed every second
 	function updateEmbed(msg, embed, timeLeft, answers, playerList) {
+		if (ended) {
+			return;
+		}
+
 		if (timeLeft > 0 && answers.size < playerList.size) {
 			setTimeout(() => { updateEmbed(msg, embed, timeLeft - 1, answers, playerList) }, 1_000);
 			msg.edit({
