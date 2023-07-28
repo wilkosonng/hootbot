@@ -164,7 +164,7 @@ function StartEmbed(questionSet, description, players) {
 	msg.setFields(
 		{
 			name: 'Players',
-			value: playerIds.length ? `${playerStrings.reverse().join(' ')} ${playerIds.length > 10 ? `+ ${players.length - 10} more` : ''}` : 'None yet! Be the first to join!'
+			value: playerIds.length ? `${playerStrings.reverse().join(' ')} ${playerIds.length > 10 ? `+ ${players.size - 10} more` : ''}` : 'None yet! Be the first to join!'
 		}
 	);
 	return msg;
