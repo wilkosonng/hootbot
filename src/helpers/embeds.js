@@ -72,7 +72,7 @@ function PlayerLeaderboardEmbed(players) {
 		.setTitle('🏆 Standings 🏆');
 
 	let description = '';
-	const sorted = [...(players.entries())].sort((a, b) => b[1] - a[1]).slice(0, 5);
+	const sorted = [...(players.entries())].sort((a, b) => b[1] - a[1]).slice(0, 10);
 	sorted.forEach((player) => {
 		description += `${inlineCode(`${Math.round(player[1])} points`)} - ${userMention(player[0])}\n`;
 	});
@@ -157,14 +157,14 @@ function StartEmbed(questionSet, description, players) {
 	let playerStrings;
 
 	const playerIds = Array.from(players.keys());
-	playerStrings = playerIds.slice(Math.max(0, playerIds.length - 5), playerIds.length).map(player => (
+	playerStrings = playerIds.slice(Math.max(0, playerIds.length - 10), playerIds.length).map(player => (
 		userMention(player)
 	));
 
 	msg.setFields(
 		{
 			name: 'Players',
-			value: playerIds.length ? `${playerStrings.reverse().join(' ')} ${playerIds.length > 5 ? `+ ${players.length - 5} more` : ''}` : 'None yet! Be the first to join!'
+			value: playerIds.length ? `${playerStrings.reverse().join(' ')} ${playerIds.length > 10 ? `+ ${players.length - 10} more` : ''}` : 'None yet! Be the first to join!'
 		}
 	);
 	return msg;
