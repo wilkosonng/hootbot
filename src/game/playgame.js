@@ -79,10 +79,10 @@ async function playGame(startChannel, channel, players, set, questions) {
 				if (nextQuestion.answer.includes(ansNum)) {
 					players.set(player, players.get(player) + getPoints(answerTime));
 				}
-				buttonInteraction.reply({
-					content: `Locked in your answer for ${choiceEmojis[ansNum - 1]}!`,
-					ephemeral: true
-				});
+				// buttonInteraction.reply({
+				// 	content: `Locked in your answer for ${choiceEmojis[ansNum - 1]}!`,
+				// 	ephemeral: true
+				// });
 			}
 		});
 
@@ -105,7 +105,7 @@ async function playGame(startChannel, channel, players, set, questions) {
 
 				if (answered.has(player)) {
 					const buttonInteraction = answered.get(player);
-					buttonInteraction.followUp({
+					buttonInteraction.reply({
 						content: `Current Placement: ${i + 1}\nPoints: ${score | 0}`,
 						ephemeral: true
 					});
