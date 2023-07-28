@@ -96,7 +96,7 @@ async function playGame(startChannel, channel, players, set, questions) {
 					embeds: [PlayerLeaderboardEmbed(players)]
 				})
 			}
-			await new Promise(r => setTimeout(r, 2_000));
+			// await new Promise(r => setTimeout(r, 2_000));
 			const sorted = [...(players.entries())].sort((a, b) => b[1] - a[1]);
 
 			sorted.forEach((e, i) => {
