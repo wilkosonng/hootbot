@@ -79,6 +79,7 @@ async function playGame(startChannel, channel, players, set, questions) {
 				if (nextQuestion.answer.includes(ansNum)) {
 					players.set(player, players.get(player) + getPoints(answerTime));
 				}
+
 				buttonInteraction.reply({
 					content: `Locked in your answer for ${choiceEmojis[ansNum - 1]}!`,
 					ephemeral: true
@@ -91,11 +92,13 @@ async function playGame(startChannel, channel, players, set, questions) {
 			await msg.edit({
 				embeds: [ResultEmbed(set, questionNumber, nextQuestion, answers).setFooter({ text: `Responses: ${answered.size}` })]
 			});
+
 			if (questions.length) {
 				await channel.send({
 					embeds: [PlayerLeaderboardEmbed(players)]
 				})
 			}
+
 			await new Promise(r => setTimeout(r, 2_000));
 			const sorted = [...(players.entries())].sort((a, b) => b[1] - a[1]);
 
