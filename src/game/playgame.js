@@ -31,15 +31,16 @@ async function playGame(startChannel, channel, players, set, questions) {
 		}
 	}));
 
-	// Plays the game
 	while (questions.length && !ended) {
 		const nextQuestion = questions.shift();
 		const questionEmbed = QuestionEmbed(set, questionNumber, nextQuestion);
 		const answered = new Map();
 		const answers = [0, 0, 0, 0];
+		const confirmations = [];
 
 		const optionBars = [];
 		nextQuestion.options.forEach((e, i) => {
+			// Builds answer message component buttons
 			const actionBar = new ActionRowBuilder();
 
 			actionBar.setComponents(
@@ -56,8 +57,10 @@ async function playGame(startChannel, channel, players, set, questions) {
 			embeds: [questionEmbed.setFooter({ text: `20 seconds | 0 responses` })],
 			components: optionBars
 		});
+
 		const startTime = Date.now();
 		updateEmbed(msg, questionEmbed, 20, answered, players);
+
 		// Collects answers from action bar
 		const answerCollector = msg.createMessageComponentCollector({
 			filter: (buttonInteraction) => players.has(buttonInteraction.user.id) && !answered.has(buttonInteraction.user.id),
@@ -80,27 +83,34 @@ async function playGame(startChannel, channel, players, set, questions) {
 					players.set(player, players.get(player) + getPoints(answerTime));
 				}
 
+				// Provides player feedback upon interaction handling.
+				confirmations.push(
+					buttonInteraction.reply({
+						content: `Locked in your answer for ${choiceEmojis[ansNum - 1]}!`,
+						ephemeral: true
+					})
+				);
+			} else {
 				buttonInteraction.reply({
-					content: `Locked in your answer for ${choiceEmojis[ansNum - 1]}!`,
+					content: `Aww! Seems like you just missed the question!`,
 					ephemeral: true
 				});
 			}
 		});
 
 		try {
+			// Waits for all players to answer or a time out
 			await events.once(answerCollector, 'end');
+
+			// Edits the message to display correct answers
 			await msg.edit({
 				embeds: [ResultEmbed(set, questionNumber, nextQuestion, answers).setFooter({ text: `Responses: ${answered.size}` })]
 			});
 
-			if (questions.length) {
-				await channel.send({
-					embeds: [PlayerLeaderboardEmbed(players)]
-				})
-			}
-
-			await new Promise(r => setTimeout(r, 2_000));
+			// Waits until all replies are sent, then provides ephemeral messages for each players' current standing (in case they are not in the top)
+			await Promise.all(confirmations);
 			const sorted = [...(players.entries())].sort((a, b) => b[1] - a[1]);
+			const leaderboard = PlayerLeaderboardEmbed(players);
 
 			sorted.forEach((e, i) => {
 				const player = e[0];
@@ -109,7 +119,9 @@ async function playGame(startChannel, channel, players, set, questions) {
 				if (answered.has(player)) {
 					const buttonInteraction = answered.get(player);
 					buttonInteraction.followUp({
-						content: `Current Placement: ${i + 1}\nPoints: ${score | 0}`,
+						embeds: [leaderboard.setFooter({
+							text: `Your current placement: ${i + 1}\nPoints: ${score | 0}`
+						})],
 						ephemeral: true
 					});
 				}
@@ -117,7 +129,7 @@ async function playGame(startChannel, channel, players, set, questions) {
 		} catch (err) {
 			console.error(err);
 			startChannel.send({
-				content: 'Oops, something went wrong!!'
+				content: 'Oops, something went wrong! Please contact the bot developer. :)'
 			});
 			ended = true;
 		}
@@ -131,10 +143,11 @@ async function playGame(startChannel, channel, players, set, questions) {
 		endGame();
 	}
 
-	channel.send({
-		content: '## Game Ended!',
-		embeds: [PlayerLeaderboardEmbed(players)]
+	await channel.send({
+		content: '## Game ended! Thanks for playing!',
 	});
+
+	return [...(players.entries())].sort((a, b) => b[1] - a[1]);
 
 	function endGame() {
 		ended = true;
