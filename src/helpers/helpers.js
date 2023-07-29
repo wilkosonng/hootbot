@@ -38,6 +38,27 @@ function removeWhiteSpace(string) {
 	return string.trim().replaceAll(spaceRegex, ' ');
 }
 
+function uploadResult(database, title, channel, result) {
+	try {
+		(async () => {
+			// Attempts to add the 
+			await set(ref(database, `results/${channel}`), {
+				set: title,
+				result: result.map((e) => ({
+					player: e[0],
+					score: e[1]
+				})),
+				timestamp: (Date.now() / 1000) | 0,
+			});
+		})();
+	} catch (error) {
+		console.error(error);
+		return false;
+	}
+
+	return true;
+}
+
 /**
  * Adds the question set data to the Firebase database
  * @param {Database} database Database to upload the question set to
@@ -72,5 +93,5 @@ function uploadSet(database, questionSet, title, description, owner) {
 }
 
 module.exports = {
-	deleteSet, removeWhiteSpace, uploadSet
+	deleteSet, removeWhiteSpace, uploadResult, uploadSet
 };

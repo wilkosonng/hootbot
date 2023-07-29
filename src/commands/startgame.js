@@ -5,6 +5,7 @@ const { getDatabase, ref, get } = require('firebase/database');
 const { playGame } = require('../game/playgame');
 const { stringSimilarity } = require('string-similarity-js');
 const { StartEmbed } = require('../helpers/embeds.js');
+const { uploadResult } = require('../helpers/helpers.js');
 require('dotenv').config();
 
 const firebaseApp = initializeApp(JSON.parse(process.env.FIREBASE_CREDS));
@@ -166,10 +167,15 @@ module.exports = {
 						joinCollector.stop();
 						clearTimeout(interval);
 						channel.send('Game starting... get your fingers on the buttons!');
-						await playGame(startChannel, channel, players, set, questions);
+						
+						// Plays the game and collects the result
+						const result = await playGame(startChannel, channel, players, set, questions);
+
+						// Uploads the result to the database and cleans up
+						uploadResult(database, set, channel.id, result);
 						currGames.delete(channel.id);
 					} else {
-						channel.send('Need at least one player to start!');
+						startChannel.send('Need at least one player to start!');
 					}
 					break;
 				case 'endtrivia':
