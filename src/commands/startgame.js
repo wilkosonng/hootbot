@@ -130,12 +130,19 @@ module.exports = {
 						content: `Successfully joined game!`,
 						ephemeral: true
 					});
-				} else if (buttonInteraction.customId === 'leaveGame' && players.has(player)) {
-					players.delete(player);
-					buttonInteraction.reply({
-						content: `Successfully left game!`,
-						ephemeral: true
-					});
+				} else if (buttonInteraction.customId === 'leaveGame') {
+					if (players.has(player)) {
+						players.delete(player);
+						buttonInteraction.reply({
+							content: `Successfully left game!`,
+							ephemeral: true
+						});
+					} else {
+						buttonInteraction.reply({
+							content: `Silly you! You can't leave a game you haven't joined!`,
+							ephemeral: true
+						});
+					}
 				}
 
 				if (editable) {
