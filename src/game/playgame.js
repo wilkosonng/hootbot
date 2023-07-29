@@ -145,6 +145,7 @@ async function playGame(startChannel, channel, players, set, questions) {
 
 	await channel.send({
 		content: '## Game ended! Thanks for playing!',
+		embeds: [PlayerLeaderboardEmbed(players)]
 	});
 
 	return [...(players.entries())].sort((a, b) => b[1] - a[1]);

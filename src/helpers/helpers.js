@@ -42,13 +42,12 @@ function uploadResult(database, title, channel, result) {
 	try {
 		(async () => {
 			// Attempts to add the 
-			await set(ref(database, `results/${channel}`), {
+			await set(ref(database, `results/${channel}/${(Date.now() / 1000) | 0}`), {
 				set: title,
 				result: result.map((e) => ({
-					player: e[0],
+					player: parseInt(e[0]),
 					score: e[1]
 				})),
-				timestamp: (Date.now() / 1000) | 0,
 			});
 		})();
 	} catch (error) {
