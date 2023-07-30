@@ -4,7 +4,8 @@ const { PlayerLeaderboardEmbed, ResultEmbed, QuestionEmbed } = require('../helpe
 const events = require('node:events');
 
 // Starts the game passed through.
-async function playGame(startChannel, channel, players, set, questions) {
+async function playGame(startChannel, channel, players, set, questions, time) {
+	const ms = 1_000 * time;
 	let questionNumber = 1;
 	let ended = false;
 
@@ -54,19 +55,19 @@ async function playGame(startChannel, channel, players, set, questions) {
 		})
 
 		const msg = await channel.send({
-			embeds: [questionEmbed.setFooter({ text: `20 seconds | 0 responses` })],
+			embeds: [questionEmbed.setFooter({ text: `${time} seconds | 0 responses` })],
 			components: optionBars
 		});
 
 		const startTime = Date.now();
-		updateEmbed(msg, questionEmbed, 20, answered, players);
+		updateEmbed(msg, questionEmbed, time, answered, players);
 
 		// Collects answers from action bar
 		const answerCollector = msg.createMessageComponentCollector({
 			filter: (buttonInteraction) => players.has(buttonInteraction.user.id) && !answered.has(buttonInteraction.user.id),
 			componentType: ComponentType.Button,
 			max: players.size,
-			time: 20_000
+			time: ms
 		});
 
 		// Handles answers
@@ -78,9 +79,9 @@ async function playGame(startChannel, channel, players, set, questions) {
 			answered.set(player, buttonInteraction);
 			answers[ansNum - 1]++;
 
-			if (answerTime < 20_001) {
+			if (answerTime <= ms) {
 				if (nextQuestion.answer.includes(ansNum)) {
-					players.set(player, players.get(player) + getPoints(answerTime));
+					players.set(player, players.get(player) + getPoints(answerTime, time));
 				}
 
 				// Provides player feedback upon interaction handling.
@@ -172,8 +173,8 @@ async function playGame(startChannel, channel, players, set, questions) {
 }
 
 // Judges the answers for correctness using string similarity.
-function getPoints(timeLeft) {
-	return 1000 - (45 * timeLeft / 1_000);
+function getPoints(timeLeft, time) {
+	return 1000 - ((900 / time) * timeLeft / 1_000);
 }
 
 module.exports = {

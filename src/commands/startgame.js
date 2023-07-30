@@ -27,6 +27,13 @@ module.exports = {
 				.setName('shuffle')
 				.setDescription('Shuffle questions? True by default.')
 				.setRequired(false))
+		.addIntegerOption(option =>
+			option
+				.setName('time')
+				.setMinValue(1)
+				.setMaxValue(60)
+				.setDescription('Number of seconds (1-60) to answer each question. 20 seconds by default.')
+				.setRequired(false))
 		.addChannelOption(option =>
 			option
 				.setName('channel')
@@ -44,6 +51,7 @@ module.exports = {
 
 		let set = interaction.options?.getString('questionset');
 		const shuffle = interaction.options?.getBoolean('shuffle') ?? true;
+		const time = interaction.options?.getInteger('time') ?? 20;
 		const channel = interaction.options?.getChannel('channel') ?? interaction.channel;
 		const startChannel = interaction.channel;
 		const players = new Map();
@@ -174,9 +182,9 @@ module.exports = {
 						joinCollector.stop();
 						clearTimeout(interval);
 						channel.send('Game starting... get your fingers on the buttons!');
-						
+
 						// Plays the game and collects the result
-						const result = await playGame(startChannel, channel, players, set, questions);
+						const result = await playGame(startChannel, channel, players, set, questions, time);
 
 						// Uploads the result to the database and cleans up
 						uploadResult(database, set, channel.id, result);
