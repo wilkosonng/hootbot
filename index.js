@@ -1,4 +1,4 @@
-const { Client, Events, GatewayIntentBits, PermissionsBitField, Collection } = require('discord.js');
+const { Client, Events, GatewayIntentBits, Collection } = require('discord.js');
 const { initializeApp } = require('firebase/app');
 const { getAuth, signInWithEmailAndPassword, signOut } = require('firebase/auth');
 const { getDatabase, onValue, ref } = require('firebase/database');
@@ -61,13 +61,6 @@ client.on(Events.InteractionCreate, async interaction => {
 	if (interaction.isChatInputCommand()) {
 		if (interaction.channel.isDMBased()) {
 			return;
-		}
-
-		if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
-			return interaction.reply({
-				content: 'Currently only for admins',
-				ephemeral: true
-			});
 		}
 
 		const commandName = interaction.commandName;
