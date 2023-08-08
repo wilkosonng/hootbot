@@ -54,52 +54,61 @@ async function playGame(startChannel, channel, players, set, questions, time) {
 			optionBars.push(actionBar);
 		})
 
-		const msg = await channel.send({
-			embeds: [questionEmbed.setFooter({ text: `${time} seconds | 0 responses` })],
-			components: optionBars
-		});
-
-		const startTime = Date.now();
-		updateEmbed(msg, questionEmbed, time, answered, players);
-
-		// Collects answers from action bar
-		const answerCollector = msg.createMessageComponentCollector({
-			filter: (buttonInteraction) => players.has(buttonInteraction.user.id) && !answered.has(buttonInteraction.user.id),
-			componentType: ComponentType.Button,
-			max: players.size,
-			time: ms
-		});
-
-		// Handles answers
-		answerCollector.on('collect', async (buttonInteraction) => {
-			const answerTime = Date.now() - startTime;
-			const player = buttonInteraction.user.id;
-			const ansNum = parseInt(buttonInteraction.customId);
-
-			answered.set(player, buttonInteraction);
-			answers[ansNum - 1]++;
-
-			if (answerTime <= ms) {
-				if (nextQuestion.answer.includes(ansNum)) {
-					players.set(player, players.get(player) + getPoints(answerTime, time));
-				}
-
-				// Provides player feedback upon interaction handling.
-				confirmations.push(
-					buttonInteraction.reply({
-						content: `Locked in your answer for ${choiceEmojis[ansNum - 1]}!`,
-						ephemeral: true
-					})
-				);
-			} else {
-				buttonInteraction.reply({
-					content: `Aww! Seems like you just missed the question!`,
-					ephemeral: true
-				});
-			}
-		});
-
 		try {
+			const msg = await channel.send({
+				embeds: [questionEmbed.setFooter({ text: `${time} seconds | 0 responses` })],
+				components: optionBars
+			});
+
+			const startTime = Date.now();
+
+			try {
+				updateEmbed(msg, questionEmbed, time, answered, players);
+			} catch (err) {
+				console.error(err);
+			}
+
+			// Collects answers from action bar
+			const answerCollector = msg.createMessageComponentCollector({
+				filter: (buttonInteraction) => players.has(buttonInteraction.user.id) && !answered.has(buttonInteraction.user.id),
+				componentType: ComponentType.Button,
+				max: players.size,
+				time: ms
+			});
+
+			// Handles answers
+			answerCollector.on('collect', async (buttonInteraction) => {
+				const answerTime = Date.now() - startTime;
+				const points = getPoints(answerTime, time);
+				const player = buttonInteraction.user.id;
+				const ansNum = parseInt(buttonInteraction.customId);
+				const choice = choiceEmojis[ansNum - 1];
+
+				answers[ansNum - 1]++;
+
+				if (answerTime <= ms) {
+					if (nextQuestion.answer.includes(ansNum)) {
+						answered.set(player, { buttonInteraction, points, choice });
+						players.set(player, players.get(player) + points);
+					} else {
+						answered.set(player, { buttonInteraction, points: 0, choice });
+					}
+
+					// Provides player feedback upon interaction handling.
+					confirmations.push(
+						buttonInteraction.reply({
+							content: `Locked in your answer for ${choice}!`,
+							ephemeral: true
+						})
+					);
+				} else {
+					buttonInteraction.reply({
+						content: `Aww! Seems like you just missed the question!`,
+						ephemeral: true
+					});
+				}
+			});
+
 			// Waits for all players to answer or a time out
 			await events.once(answerCollector, 'end');
 
@@ -112,16 +121,20 @@ async function playGame(startChannel, channel, players, set, questions, time) {
 			await Promise.all(confirmations);
 			const sorted = [...(players.entries())].sort((a, b) => b[1] - a[1]);
 			const leaderboard = PlayerLeaderboardEmbed(players);
+			const answerText = choiceEmojis
+				.filter((_, i) => (
+					nextQuestion.answer.includes(i + 1)))
+				.join(', ');
 
 			sorted.forEach((e, i) => {
 				const player = e[0];
 				const score = e[1];
 
 				if (answered.has(player)) {
-					const buttonInteraction = answered.get(player);
+					const { buttonInteraction, points, choice } = answered.get(player);
 					buttonInteraction.followUp({
 						embeds: [leaderboard.setFooter({
-							text: `Your current placement: ${i + 1}\nPoints: ${score | 0}`
+							text: `Your current placement: ${i + 1}\nPoints: ${score | 0} (+ ${points | 0})\nYour Answer: ${choice} | Correct Answer: ${answerText}`
 						})],
 						ephemeral: true
 					});
@@ -129,10 +142,6 @@ async function playGame(startChannel, channel, players, set, questions, time) {
 			})
 		} catch (err) {
 			console.error(err);
-			startChannel.send({
-				content: 'Oops, something went wrong! Please contact the bot developer. :)'
-			});
-			ended = true;
 		}
 
 		// Start a new question in 5 seconds
@@ -164,17 +173,21 @@ async function playGame(startChannel, channel, players, set, questions, time) {
 
 		if (timeLeft > 0 && answers.size < playerList.size) {
 			setTimeout(() => { updateEmbed(msg, embed, timeLeft - 1, answers, playerList) }, 1_000);
-			msg.edit({
-				embeds: [embed.setFooter({ text: `${timeLeft} seconds | ${answers.size} responses` })],
-				components: msg.components
-			});
+			try {
+				msg.edit({
+					embeds: [embed.setFooter({ text: `${timeLeft} seconds | ${answers.size} responses` })],
+					components: msg.components
+				});
+			} catch (error) {
+				console.error(error);
+			}
 		}
 	}
 }
 
 // Judges the answers for correctness using string similarity.
 function getPoints(timeLeft, time) {
-	return 1000 - ((900 / time) * timeLeft / 1_000);
+	return 1_000 - ((900 / time) * timeLeft / 1_000);
 }
 
 module.exports = {

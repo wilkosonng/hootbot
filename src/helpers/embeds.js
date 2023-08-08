@@ -74,7 +74,7 @@ function PlayerLeaderboardEmbed(players) {
 	let description = '';
 	const sorted = [...(players.entries())].sort((a, b) => b[1] - a[1]).slice(0, 10);
 	sorted.forEach((player) => {
-		description += `${inlineCode(`${Math.round(player[1])} points`)} - ${userMention(player[0])}\n`;
+		description += `${inlineCode(`${player[1] | 0} points`)} - ${userMention(player[0])}\n`;
 	});
 	return msg.setDescription(description);
 }

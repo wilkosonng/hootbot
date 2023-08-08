@@ -58,62 +58,72 @@ client.once(Events.ClientReady, async clientObject => {
 
 // Command handler
 client.on(Events.InteractionCreate, async interaction => {
-	if (interaction.isChatInputCommand()) {
-		if (interaction.channel.isDMBased()) {
-			return;
-		}
-
-		const commandName = interaction.commandName;
-		const command = interaction.client.commands.get(commandName);
-
-		if (!command) {
-			console.error(`No command matching ${commandName} was found.`);
-			return;
-		}
-
-		try {
-			switch (commandName) {
-				case 'addsheet':
-				case 'removeset':
-				case 'startgame':
-					// Passes array of set name cache
-					await command.execute(interaction, Object.keys(sets));
-					break;
-				case 'info':
-					// Passes in command list
-					await command.execute(interaction, Array.from(client.commands.keys()));
-					break;
-				default:
-					// Otherwise, passes in only interaction
-					await command.execute(interaction);
+	try {
+		if (interaction.isChatInputCommand()) {
+			if (interaction.channel.isDMBased()) {
+				return;
 			}
-		} catch (error) {
-			console.error(error);
-			interaction.channel.send('Oopsies, something went wrong! Please contact the bot developer.');
+
+			const commandName = interaction.commandName;
+			const command = interaction.client.commands.get(commandName);
+
+			if (!command) {
+				console.error(`No command matching ${commandName} was found.`);
+				return;
+			}
+
+			try {
+				switch (commandName) {
+					case 'addsheet':
+					case 'removeset':
+					case 'startgame':
+						// Passes array of set name cache
+						await command.execute(interaction, Object.keys(sets));
+						break;
+					case 'info':
+						// Passes in command list
+						await command.execute(interaction, Array.from(client.commands.keys()));
+						break;
+					default:
+						// Otherwise, passes in only interaction
+						await command.execute(interaction);
+				}
+			} catch (error) {
+				console.error(error);
+				interaction.channel.send('Oopsies, something went wrong! Please contact the bot developer.');
+			}
 		}
+	} catch (error) {
+		console.error(error);
+		interaction.channel.send('Oopsies, something went wrong! Please contact the bot developer.');
 	}
 });
 
 // Autocomplete handler
 client.on(Events.InteractionCreate, async interaction => {
-	if (!interaction.isAutocomplete()) {
-		return;
-	}
-
-	const command = interaction.client.commands.get(interaction.commandName);
-
-	if (!command) {
-		console.error(`No command matching ${interaction.commandName} was found.`);
-		return;
-	}
-
 	try {
-		if (interaction.commandName === 'info') {
-			return await command.autocomplete(interaction, Array.from(client.commands.keys()));
+		if (!interaction.isAutocomplete()) {
+			return;
 		}
-		await command.autocomplete(interaction, Object.keys(sets));
+
+		const command = interaction.client.commands.get(interaction.commandName);
+
+		if (!command) {
+			console.error(`No command matching ${interaction.commandName} was found.`);
+			return;
+		}
+
+		try {
+			if (interaction.commandName === 'info') {
+				return await command.autocomplete(interaction, Array.from(client.commands.keys()));
+			}
+			await command.autocomplete(interaction, Object.keys(sets));
+		} catch (error) {
+			console.error(error);
+		}
 	} catch (error) {
 		console.error(error);
+		interaction.channel.send('Oopsies, something went wrong! Please contact the bot developer.');
 	}
 });
 
