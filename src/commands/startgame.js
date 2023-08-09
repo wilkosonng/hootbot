@@ -55,6 +55,7 @@ module.exports = {
 		const channel = interaction.options?.getChannel('channel') ?? interaction.channel;
 		const startChannel = interaction.channel;
 		const players = new Map();
+		let startCollector;
 		let editable = false;
 		let questions, description, joinCollector, interval;
 
@@ -168,7 +169,7 @@ module.exports = {
 			});
 		}
 
-		const startCollector = startChannel.createMessageCollector({
+		startCollector = startChannel.createMessageCollector({
 			filter: (msg) => msg.author?.id === interaction.user.id && (msg.content.toLowerCase() === 'endtrivia' || (msg.content.toLowerCase() === 'ready')),
 			time: 900_000
 		});

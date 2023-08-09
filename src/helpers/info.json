@@ -61,6 +61,10 @@
       {
         "name": "channel `(optional)` -",
         "value": "The channel you wish the game to be played in. Default: the channel you invoke the command in."
+      },
+      {
+        "name": "time `(optional)` -",
+        "value": "The amount of time, in seconds (1-60), per question (20 seconds by default)."
       }
     ]
   }
