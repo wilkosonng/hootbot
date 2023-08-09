@@ -63,6 +63,10 @@ module.exports = {
 			return await interaction.editReply('Error: Game has already started in this channel!');
 		}
 
+		if (!channel.permissionsFor(interaction.client.user.id).has(PermissionsBitField.Flags.ViewChannel)) {
+			return await interaction.editReply('Error: No permissions to view channel!');
+		}
+
 		if (!channel.permissionsFor(interaction.client.user.id).has(PermissionsBitField.Flags.SendMessages)) {
 			return await interaction.editReply('Error: No permissions to send messages in channel!');
 		}
