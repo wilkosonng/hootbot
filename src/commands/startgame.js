@@ -138,11 +138,18 @@ module.exports = {
 				const player = buttonInteraction.user.id;
 
 				if (buttonInteraction.customId === 'joinGame' && !players.has(player)) {
-					players.set(player, 0);
-					buttonInteraction.reply({
-						content: `Successfully joined game!`,
-						ephemeral: true
-					});
+					if (players.has(player)) {
+						buttonInteraction.reply({
+							content: `Looks like you've already joined! Feel free to sit back and wait for the show to begin!`,
+							ephemeral: true
+						});
+					} else {
+						players.set(player, 0);
+						buttonInteraction.reply({
+							content: `Successfully joined game!`,
+							ephemeral: true
+						});
+					}
 				} else if (buttonInteraction.customId === 'leaveGame') {
 					if (players.has(player)) {
 						players.delete(player);
