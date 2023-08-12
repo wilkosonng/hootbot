@@ -175,7 +175,7 @@ module.exports = {
 
 		startCollector = startChannel.createMessageCollector({
 			filter: (msg) => msg.author?.id === interaction.user.id && (msg.content.toLowerCase() === 'endtrivia' || (msg.content.toLowerCase() === 'ready')),
-			time: 900_000
+			time: 1_200_000
 		});
 
 		startCollector.on('collect', async (msg) => {

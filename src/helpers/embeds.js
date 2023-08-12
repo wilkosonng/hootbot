@@ -1,5 +1,5 @@
 const { Client, Member, EmbedBuilder, bold, underscore, strikethrough, inlineCode, userMention } = require('discord.js');
-const { embedColor, choiceEmojis } = require('../../config.json');
+const { embedColor, choiceEmojis, leaderboardDisplay } = require('../../config.json');
 const info = require('./info.json');
 
 /**
@@ -72,7 +72,7 @@ function PlayerLeaderboardEmbed(players) {
 		.setTitle('🏆 Standings 🏆');
 
 	let description = '';
-	const sorted = [...(players.entries())].sort((a, b) => b[1] - a[1]).slice(0, 10);
+	const sorted = [...(players.entries())].sort((a, b) => b[1] - a[1]).slice(0, leaderboardDisplay);
 	sorted.forEach((player) => {
 		description += `${inlineCode(`${player[1] | 0} points`)} - ${userMention(player[0])}\n`;
 	});
