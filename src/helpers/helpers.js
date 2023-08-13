@@ -42,8 +42,6 @@ function uploadResult(database, title, channel, result) {
 	try {
 		(async () => {
 			// Attempts to add the result to the database
-			console.log(result[0]);
-			console.log(Number(result[0][0]));
 			await set(ref(database, `results/${channel}/${(Date.now() / 1000) | 0}`), {
 				set: title,
 				result: result.map((e) => ({
