@@ -130,21 +130,21 @@ async function playGame(startChannel, channel, players, set, questions, time) {
 				embeds: [PlayerLeaderboardEmbed(players)]
 			})
 
-			sorted.forEach((e, i) => {
-				const player = e[0];
-				const score = e[1];
+			// sorted.forEach((e, i) => {
+			// 	const player = e[0];
+			// 	const score = e[1];
 
-				if (answered.has(player)) {
-					const { buttonInteraction, points, choice } = answered.get(player);
-					followUps.push(
-						buttonInteraction.followUp({
-							content: codeBlock(`Your current placement: ${i + 1}\nPoints: ${score | 0} (+ ${points | 0})\nYour Answer: ${choice} | Correct Answer: ${answerText}`),
-							ephemeral: true
-						}));
-				}
-			});
+			// 	if (answered.has(player)) {
+			// 		const { buttonInteraction, points, choice } = answered.get(player);
+			// 		followUps.push(
+			// 			buttonInteraction.followUp({
+			// 				content: codeBlock(`Your current placement: ${i + 1}\nPoints: ${score | 0} (+ ${points | 0})\nYour Answer: ${choice} | Correct Answer: ${answerText}`),
+			// 				ephemeral: true
+			// 			}));
+			// 	}
+			// });
 
-			await Promise.all(followUps);
+			// await Promise.all(followUps);
 		} catch (err) {
 			console.error(err);
 		}
