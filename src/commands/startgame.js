@@ -138,18 +138,11 @@ module.exports = {
 				const player = buttonInteraction.user.id;
 
 				if (buttonInteraction.customId === 'joinGame' && !players.has(player)) {
-					if (players.has(player)) {
-						buttonInteraction.reply({
-							content: `Looks like you've already joined! Feel free to sit back and wait for the show to begin!`,
-							ephemeral: true
-						});
-					} else {
-						players.set(player, 0);
-						buttonInteraction.reply({
-							content: `Successfully joined game!`,
-							ephemeral: true
-						});
-					}
+					players.set(player, 0);
+					buttonInteraction.reply({
+						content: `Successfully joined game!`,
+						ephemeral: true
+					});
 				} else if (buttonInteraction.customId === 'leaveGame') {
 					if (players.has(player)) {
 						players.delete(player);
@@ -163,6 +156,11 @@ module.exports = {
 							ephemeral: true
 						});
 					}
+				} else {
+					buttonInteraction.reply({
+						content: `Looks like you've already joined! Feel free to sit back and wait for the show to begin!`,
+						ephemeral: true
+					});
 				}
 
 				if (editable) {
@@ -215,12 +213,12 @@ module.exports = {
 		startCollector.on('end', (_, reason) => {
 			switch (reason) {
 				case 'time':
-					channel.send('Game timed out');
+					startChannel.send('Game timed out');
 					break;
 				case 'user':
 					return;
 				default:
-					channel.send('Oops, something went wrong!');
+					startChannel.send('Oops, something went wrong!');
 					break;
 			}
 			endGame();
@@ -257,7 +255,7 @@ module.exports = {
 		// Regularly updates the interval for message edits
 		function updateInterval() {
 			editable = true;
-			interval = setTimeout(updateInterval, 1_000);
+			interval = setTimeout(updateInterval, 2_000);
 		}
 
 		await interaction.editReply('Game successfully started! Type \`ready\` once all users have joined or \`endtrivia\` to end the game!');

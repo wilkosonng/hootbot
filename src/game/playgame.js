@@ -1,4 +1,4 @@
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require('discord.js');
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, codeBlock } = require('discord.js');
 const { choiceEmojis } = require('../../config.json');
 const { PlayerLeaderboardEmbed, ResultEmbed, QuestionEmbed } = require('../helpers/embeds.js');
 const events = require('node:events');
@@ -120,11 +120,15 @@ async function playGame(startChannel, channel, players, set, questions, time) {
 			// Waits until all replies are sent, then provides ephemeral messages for each players' current standing (in case they are not in the top)
 			await Promise.all(confirmations);
 			const sorted = [...(players.entries())].sort((a, b) => b[1] - a[1]);
-			const leaderboard = PlayerLeaderboardEmbed(players);
+			const followUps = [];
 			const answerText = choiceEmojis
 				.filter((_, i) => (
 					nextQuestion.answer.includes(i + 1)))
 				.join(', ');
+
+			await channel.send({
+				embeds: [PlayerLeaderboardEmbed(players)]
+			})
 
 			sorted.forEach((e, i) => {
 				const player = e[0];
@@ -132,14 +136,15 @@ async function playGame(startChannel, channel, players, set, questions, time) {
 
 				if (answered.has(player)) {
 					const { buttonInteraction, points, choice } = answered.get(player);
-					buttonInteraction.followUp({
-						embeds: [leaderboard.setFooter({
-							text: `Your current placement: ${i + 1}\nPoints: ${score | 0} (+ ${points | 0})\nYour Answer: ${choice} | Correct Answer: ${answerText}`
-						})],
-						ephemeral: true
-					});
+					followUps.push(
+						buttonInteraction.followUp({
+							content: codeBlock(`Your current placement: ${i + 1}\nPoints: ${score | 0} (+ ${points | 0})\nYour Answer: ${choice} | Correct Answer: ${answerText}`),
+							ephemeral: true
+						}));
 				}
-			})
+			});
+
+			await Promise.all(followUps);
 		} catch (err) {
 			console.error(err);
 		}
@@ -172,7 +177,7 @@ async function playGame(startChannel, channel, players, set, questions, time) {
 		}
 
 		if (timeLeft > 0 && answers.size < playerList.size) {
-			setTimeout(() => { updateEmbed(msg, embed, timeLeft - 1, answers, playerList) }, 1_000);
+			setTimeout(() => { updateEmbed(msg, embed, timeLeft - 2, answers, playerList) }, 2_000);
 			try {
 				msg.edit({
 					embeds: [embed.setFooter({ text: `${timeLeft} seconds | ${answers.size} responses` })],
