@@ -76,6 +76,7 @@ client.on(Events.InteractionCreate, async interaction => {
 				switch (commandName) {
 					case 'addsheet':
 					case 'removeset':
+					case 'setinfo':
 					case 'startgame':
 						// Passes array of set name cache
 						await command.execute(interaction, Object.keys(sets));

@@ -1,4 +1,4 @@
-const { Client, Member, EmbedBuilder, bold, underscore, strikethrough, inlineCode, userMention } = require('discord.js');
+const { Client, Member, EmbedBuilder, bold, underscore, strikethrough, inlineCode, time, userMention } = require('discord.js');
 const { embedColor, choiceEmojis, leaderboardDisplay } = require('../../config.json');
 const info = require('./info.json');
 
@@ -214,5 +214,5 @@ function StartEmbed(questionSet, description, players) {
 }
 
 module.exports = {
-	AddSummaryEmbed, InfoEmbed, PlayerLeaderboardEmbed, RankingEmbed, ResultEmbed, QuestionEmbed, StartEmbed
+	AddSummaryEmbed, InfoEmbed, PlayerLeaderboardEmbed, RankingEmbed, ResultEmbed, QuestionEmbed, QuestionInfoEmbed, StartEmbed
 };
