@@ -106,6 +106,49 @@ function QuestionEmbed(questionSet, num, questionObject) {
 }
 
 /**
+ * Generates an embed listing question set info to a query.
+ *
+ * @param {string} title The title of the question set requested.
+ * @param {number} numQuestions The number of questions of the query.
+ * @param {Object} data Query result containing the question set description, owner, and creation date.
+ *
+ * @return {EmbedBuilder} The embed to be displayed.
+*/
+function QuestionInfoEmbed(title, numQuestions, { description, owner, timestamp }) {
+	return new EmbedBuilder()
+		.setColor(embedColor)
+		.setTitle(title)
+		.setDescription(description)
+		.addFields(
+			{ name: bold(underscore('Topic Creator')), value: userMention(owner) },
+			{ name: bold(underscore('Number of Questions')), value: numQuestions.toString() },
+			{ name: bold(underscore('Date Created')), value: time(timestamp) },
+		)
+		.setTimestamp();
+}
+
+
+/**
+ * Generates an embed displaying the the current rank of a player.
+ *
+ * @param {Object} playerInfo The object containing the player choice, points, and button interaction
+ * @param {number} score The amount of points the player currently has
+ * @param {number} rank The current rank of the player.
+ * @param {string} answer The answer to the previous question
+ *
+ * @return {EmbedBuilder} The embed to be displayed.
+*/
+function RankingEmbed(playerInfo, score, rank, answer) {
+	return new EmbedBuilder()
+		.setColor(embedColor)
+		.setTitle('🏅 Current Rank 🏅')
+		.setDescription(`Current Placement: ${rank}\nCurrent Score: ${score | 0} ${inlineCode(`(+${(playerInfo?.points ?? 0) | 0})`)}`)
+		.setFooter({
+			text: playerInfo ? `Player Response: ${playerInfo.choice}\nCorrect Answer: ${answer}` : 'Did not answer last question.'
+		});
+}
+
+/**
  * Generates an embed displaying the outcome of a trivia question.
  *
  * @param {string} questionSet The name of the current question set.
@@ -171,5 +214,5 @@ function StartEmbed(questionSet, description, players) {
 }
 
 module.exports = {
-	AddSummaryEmbed, InfoEmbed, PlayerLeaderboardEmbed, ResultEmbed, QuestionEmbed, StartEmbed
+	AddSummaryEmbed, InfoEmbed, PlayerLeaderboardEmbed, RankingEmbed, ResultEmbed, QuestionEmbed, StartEmbed
 };

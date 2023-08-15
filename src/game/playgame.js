@@ -1,6 +1,6 @@
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, codeBlock } = require('discord.js');
 const { choiceEmojis } = require('../../config.json');
-const { PlayerLeaderboardEmbed, ResultEmbed, QuestionEmbed } = require('../helpers/embeds.js');
+const { PlayerLeaderboardEmbed, RankingEmbed, ResultEmbed, QuestionEmbed } = require('../helpers/embeds.js');
 const events = require('node:events');
 
 // Starts the game passed through.
@@ -31,6 +31,14 @@ async function playGame(startChannel, channel, players, set, questions, time) {
 				break;
 		}
 	}));
+
+	const rankingRow = [new ActionRowBuilder().setComponents(
+		new ButtonBuilder()
+			.setCustomId('ranking')
+			.setLabel('Check Current Rank')
+			.setEmoji('🏅')
+			.setStyle(ButtonStyle.Primary)
+	)];
 
 	while (questions.length && !ended) {
 		const nextQuestion = questions.shift();
@@ -101,11 +109,6 @@ async function playGame(startChannel, channel, players, set, questions, time) {
 							ephemeral: true
 						})
 					);
-				} else {
-					buttonInteraction.reply({
-						content: `Aww! Seems like you just missed the question!`,
-						ephemeral: true
-					});
 				}
 			});
 
@@ -119,32 +122,37 @@ async function playGame(startChannel, channel, players, set, questions, time) {
 
 			// Waits until all replies are sent, then provides ephemeral messages for each players' current standing (in case they are not in the top)
 			await Promise.all(confirmations);
-			const sorted = [...(players.entries())].sort((a, b) => b[1] - a[1]);
-			const followUps = [];
+			const ranks = new Map([...(players.entries())].sort((a, b) => b[1] - a[1]).map((e, i) => [e[0], i + 1]));
 			const answerText = choiceEmojis
 				.filter((_, i) => (
 					nextQuestion.answer.includes(i + 1)))
 				.join(', ');
 
-			await channel.send({
-				embeds: [PlayerLeaderboardEmbed(players)]
-			})
+			const standings = await channel.send({
+				embeds: [PlayerLeaderboardEmbed(players)],
+				components: rankingRow
+			});
 
-			// sorted.forEach((e, i) => {
-			// 	const player = e[0];
-			// 	const score = e[1];
+			const rankingCollector = standings.createMessageComponentCollector({
+				filter: (buttonInteraction) => players.has(buttonInteraction.user.id),
+				componentType: ComponentType.Button,
+				time: 4_000
+			});
 
-			// 	if (answered.has(player)) {
-			// 		const { buttonInteraction, points, choice } = answered.get(player);
-			// 		followUps.push(
-			// 			buttonInteraction.followUp({
-			// 				content: codeBlock(`Your current placement: ${i + 1}\nPoints: ${score | 0} (+ ${points | 0})\nYour Answer: ${choice} | Correct Answer: ${answerText}`),
-			// 				ephemeral: true
-			// 			}));
-			// 	}
-			// });
-
-			// await Promise.all(followUps);
+			rankingCollector.on('collect', async (buttonInteraction) => {
+				const player = buttonInteraction.user.id;
+				if (!answered.has(player)) {
+					buttonInteraction.reply({
+						embeds: [RankingEmbed(null, players.get(player), ranks.get(player), answerText)],
+						ephemeral: true
+					});
+				} else {
+					buttonInteraction.reply({
+						embeds: [RankingEmbed(answered.get(player), players.get(player), ranks.get(player), answerText)],
+						ephemeral: true
+					});
+				}
+			});
 		} catch (err) {
 			console.error(err);
 		}
@@ -177,7 +185,7 @@ async function playGame(startChannel, channel, players, set, questions, time) {
 		}
 
 		if (timeLeft > 0 && answers.size < playerList.size) {
-			setTimeout(() => { updateEmbed(msg, embed, timeLeft - 2, answers, playerList) }, 2_000);
+			setTimeout(() => { updateEmbed(msg, embed, timeLeft - 1, answers, playerList) }, 1_000);
 			try {
 				msg.edit({
 					embeds: [embed.setFooter({ text: `${timeLeft} seconds | ${answers.size} responses` })],
