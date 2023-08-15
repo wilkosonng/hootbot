@@ -1,0 +1,24 @@
+/* %%%%%%%%%%%%%%%%%
+ * HOW TO USE CONFIG
+ * %%%%%%%%%%%%%%%%%
+ *
+ * Fill in the information and rename this file to config.json
+ * Afterwards, delete this entire comment.
+ * The following are descriptions of what to fill in:
+ *
+ * clientID - Your application's ID as a string.
+ * embedColor - Color for the embed highlights. Default: 13719405
+ * joinEmoji - The unicode emoji or emoji ID of the join button.
+ * leaveEmoji - The unicode emoji or emoji ID of the leave button.
+ * choiceEmojis - An array of 4 unicode emojis or their IDs.
+ * leaderboardDisplay: The maximum number of players to display on the in-game leaderboard (Default: 5).
+*/
+
+{
+  "clientID": "123456789",
+  "embedColor": 13719405,
+  "joinEmoji": "📥 ",
+  "leaveEmoji": "📤",
+  "choiceEmojis": ["🔴", "🟡", "🔵", "🟢"],
+  "leaderboardDisplay": 5
+}
