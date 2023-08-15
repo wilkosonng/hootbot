@@ -134,6 +134,7 @@ module.exports = {
 				filter: (buttonInteraction) => !buttonInteraction.user.bot,
 			});
 
+			// Handles joining and leaving a trivia game.
 			joinCollector.on('collect', (buttonInteraction) => {
 				const player = buttonInteraction.user.id;
 
@@ -255,7 +256,7 @@ module.exports = {
 		// Regularly updates the interval for message edits
 		function updateInterval() {
 			editable = true;
-			interval = setTimeout(updateInterval, 2_000);
+			interval = setTimeout(updateInterval, 1_000);
 		}
 
 		await interaction.editReply('Game successfully started! Type \`ready\` once all users have joined or \`endtrivia\` to end the game!');
