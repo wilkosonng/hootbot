@@ -37,7 +37,7 @@ In order to host this bot, you will need the following services:
 2. Rename the `config-template.json` file to `config.json`. Edit it if necessary.
 3. Open up a shell and type `npm i` to install relevant Node.js packages.
 4. Create a `.env` file in the directory and fill in the following variables:
-   - `TRIVIA_BOT_TOKEN` - Your bot token.
+   - `HOOT_BOT_TOKEN` - Your bot token.
    - `FIREBASE_CREDS` - The string representation of your Firebase credentials.
    - `GOOGLE_CREDS` - The string representation of your Google service Account credentials.
    - `FIREBASE_EMAIL` - The email associated with your Firebase database access.
