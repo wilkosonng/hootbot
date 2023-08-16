@@ -117,7 +117,8 @@ async function playGame(startChannel, channel, players, set, questions, time) {
 
 			// Edits the message to display correct answers
 			await msg.edit({
-				embeds: [ResultEmbed(set, questionNumber, nextQuestion, answers).setFooter({ text: `Responses: ${answered.size}` })]
+				embeds: [ResultEmbed(set, questionNumber, nextQuestion, answers).setFooter({ text: `Responses: ${answered.size}` })],
+				components: []
 			});
 
 			// Waits until all replies are sent, then provides ephemeral messages for each players' current standing (in case they are not in the top)
@@ -152,6 +153,13 @@ async function playGame(startChannel, channel, players, set, questions, time) {
 						ephemeral: true
 					});
 				}
+			});
+
+			rankingCollector.on('end', () => {
+				standings.edit({
+					embeds: [PlayerLeaderboardEmbed(players)],
+					components: []
+				});
 			});
 		} catch (err) {
 			console.error(err);

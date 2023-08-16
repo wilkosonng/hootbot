@@ -56,7 +56,6 @@ module.exports = {
 		const startChannel = interaction.channel;
 		const players = new Map();
 		let startCollector;
-		let editable = false;
 		let questions, description, joinCollector, interval;
 
 		if (currGames.has(interaction.channel.id)) {
@@ -108,7 +107,6 @@ module.exports = {
 		}
 
 		try {
-			// Ah yes, socket timeout.
 			const joinButton = new ButtonBuilder()
 				.setCustomId('joinGame')
 				.setLabel('Join')
@@ -127,7 +125,7 @@ module.exports = {
 			const msg = await channel.send({
 				embeds: [StartEmbed(set, description, players)],
 				components: [startBar]
-			})
+			});
 
 			joinCollector = msg.createMessageComponentCollector({
 				componentType: ComponentType.Button,
@@ -163,14 +161,16 @@ module.exports = {
 						ephemeral: true
 					});
 				}
-
-				if (editable) {
-					editable = false;
-					updateEmbed(startBar, msg);
-				}
 			});
 
-			updateInterval();
+			joinCollector.on('end', () => {
+				msg.edit({
+					embeds: [StartEmbed(set, description, players)],
+					components: []
+				});
+			});
+
+			interval = setInterval(() => updateEmbed(startBar, msg), 1_000);
 		} catch (error) {
 			console.error(error);
 			endGame();
@@ -191,7 +191,7 @@ module.exports = {
 					if (players.size) {
 						startCollector.stop();
 						joinCollector.stop();
-						clearTimeout(interval);
+						clearInterval(interval);
 						channel.send('Game starting... get your fingers on the buttons!');
 
 						// Plays the game and collects the result
@@ -227,7 +227,7 @@ module.exports = {
 
 		// Thanos time
 		function endGame() {
-			clearTimeout(interval);
+			clearInterval(interval);
 			startCollector?.stop();
 			joinCollector?.stop();
 			currGames.delete(channel.id);
@@ -251,12 +251,6 @@ module.exports = {
 				embeds: [StartEmbed(set, description, players)],
 				components: [row]
 			});
-		}
-
-		// Regularly updates the interval for message edits
-		function updateInterval() {
-			editable = true;
-			interval = setTimeout(updateInterval, 1_000);
 		}
 
 		await interaction.editReply('Game successfully started! Type \`ready\` once all users have joined or \`endtrivia\` to end the game!');
