@@ -12,6 +12,19 @@ const firebaseApp = initializeApp(JSON.parse(process.env.FIREBASE_CREDS));
 const database = getDatabase(firebaseApp);
 const currGames = new Set();
 
+const startBar = new ActionRowBuilder()
+	.setComponents(
+		new ButtonBuilder()
+			.setCustomId('joinGame')
+			.setLabel('Join')
+			.setStyle(ButtonStyle.Primary)
+			.setEmoji(joinEmoji),
+		new ButtonBuilder()
+			.setCustomId('leaveGame')
+			.setLabel('Leave')
+			.setStyle(ButtonStyle.Secondary)
+			.setEmoji(leaveEmoji));
+
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('startgame')
@@ -107,21 +120,6 @@ module.exports = {
 		}
 
 		try {
-			const joinButton = new ButtonBuilder()
-				.setCustomId('joinGame')
-				.setLabel('Join')
-				.setStyle(ButtonStyle.Primary)
-				.setEmoji(joinEmoji);
-
-			const leaveButton = new ButtonBuilder()
-				.setCustomId('leaveGame')
-				.setLabel('Leave')
-				.setStyle(ButtonStyle.Secondary)
-				.setEmoji(leaveEmoji);
-
-			const startBar = new ActionRowBuilder()
-				.setComponents(joinButton, leaveButton);
-
 			const msg = await channel.send({
 				embeds: [StartEmbed(set, description, players)],
 				components: [startBar]
