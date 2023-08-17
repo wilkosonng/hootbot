@@ -14,6 +14,7 @@ Additional information can be obtained using the `/info` command.
 
 ### Question Set Management
 
+- `/listsets` - Lists up to 10 question sets that match the given query.
 - `/setinfo` - Provides information and data on the given question set.
 
 ### Playing Trivia

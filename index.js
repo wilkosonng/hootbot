@@ -81,6 +81,10 @@ client.on(Events.InteractionCreate, async interaction => {
 						// Passes array of set name cache
 						await command.execute(interaction, Object.keys(sets));
 						break;
+					case 'listsets':
+						// Passes array of set metadata cache
+						await command.execute(interaction, Object.entries(sets));
+						break;
 					case 'info':
 						// Passes in command list
 						await command.execute(interaction, Array.from(client.commands.keys()));

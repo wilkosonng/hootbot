@@ -60,6 +60,34 @@ function InfoEmbed(command) {
 }
 
 /**
+ * Generates an embed listing question sets that match the query.
+ *
+ * @param {number} page The page of the query requested.
+ * @param {number} maxPage The highest page of the query.
+ * @param {string} keyword The string query the user submitted.
+ * @param {Array} questionSets The list of question sets of the query.
+ *
+ * @return {EmbedBuilder} The embed to be displayed.
+*/
+function ListEmbed(page, maxPage, keyword, questionSets) {
+	const leftIndex = 10 * (page - 1);
+	const rightIndex = Math.min(10 * page, questionSets.length);
+	const slice = questionSets.slice(leftIndex, rightIndex);
+	let description = keyword ? `### > Matching query ${inlineCode(keyword)}\n` : '';
+
+	for (const [title, metadata] of slice) {
+		description += `${inlineCode(title)} - <@${metadata.owner}>\n`;
+	}
+
+	return new EmbedBuilder()
+		.setColor(embedColor)
+		.setTitle(`Page ${page} of ${maxPage}`)
+		.setDescription(description)
+		.setFooter({ text: `Question Sets ${leftIndex + 1} to ${rightIndex}` });
+
+}
+
+/**
  * Generates an embed with current point standings for each player.
  *
  * @param {Map<number, number>} players The list of all player objects.
@@ -214,5 +242,5 @@ function StartEmbed(questionSet, description, players) {
 }
 
 module.exports = {
-	AddSummaryEmbed, InfoEmbed, PlayerLeaderboardEmbed, RankingEmbed, ResultEmbed, QuestionEmbed, QuestionInfoEmbed, StartEmbed
+	AddSummaryEmbed, InfoEmbed, ListEmbed, PlayerLeaderboardEmbed, RankingEmbed, ResultEmbed, QuestionEmbed, QuestionInfoEmbed, StartEmbed
 };
