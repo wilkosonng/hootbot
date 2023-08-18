@@ -157,7 +157,6 @@ async function playGame(startChannel, channel, players, set, questions, time) {
 
 			rankingCollector.on('end', () => {
 				standings.edit({
-					embeds: [PlayerLeaderboardEmbed(players)],
 					components: []
 				});
 			});

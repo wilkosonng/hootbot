@@ -163,7 +163,6 @@ module.exports = {
 
 			joinCollector.on('end', () => {
 				msg.edit({
-					embeds: [StartEmbed(set, description, players)],
 					components: []
 				});
 			});

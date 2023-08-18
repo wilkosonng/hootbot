@@ -68,7 +68,6 @@ module.exports = {
 
 			collector.on('end', () => {
 				return msg.edit({
-					embeds: [ListEmbed(page, maxPage, keyword, currSets)],
 					components: []
 				});
 			});
