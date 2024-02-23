@@ -71,7 +71,7 @@ module.exports = {
 		let startCollector;
 		let questions, description, joinCollector, interval;
 
-		if (currGames.has(interaction.channel.id)) {
+		if (currGames.has(channel.id)) {
 			return await interaction.editReply('Error: Game has already started in this channel!');
 		}
 

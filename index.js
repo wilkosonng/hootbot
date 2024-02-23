@@ -60,8 +60,8 @@ client.once(Events.ClientReady, async clientObject => {
 client.on(Events.InteractionCreate, async interaction => {
 	try {
 		if (interaction.isChatInputCommand()) {
-			if (interaction.channel.isDMBased()) {
-				return;
+			if (!interaction.channel) {
+				return interaction.reply('Invalid channel!');
 			}
 
 			const commandName = interaction.commandName;
